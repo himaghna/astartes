@@ -1,23 +1,11 @@
 """Abstract Sampling class"""
 from abc import ABC, abstractmethod
 
-from ..exceptions import *
-
 
 class Sampler(ABC):
     @abstractmethod
-    def __init__(self, configs):
+    def __init__(self, X, y=None, distance_matrix=None, **kwargs):
         pass
-
-    @abstractmethod
-    def populate(self, X, y=None):
-        """
-        Load data in this instance.
-
-        """
-        self.X = X
-        self.y = y
-        self.samples = []
 
     @abstractmethod
     def get_sample(self):
@@ -25,14 +13,7 @@ class Sampler(ABC):
         Get one sample.
 
         """
-        if not self.is_populated:
-            raise NotInitializedError('Populate sampler instance with '
-                                      'data to get samples')
-        if len(self.samples) == len(X):
-            raise ValueError('Dataset exhausted')
-
-        self.samples.append(self.get_next_samle_id())
-        return self.samples[-1]
+        pass
 
     @abstractmethod
     def get_sample_id(self):
@@ -48,7 +29,7 @@ class Sampler(ABC):
         Get a batch of samples
 
         """
-        return self.X[self.get_batch_sample_idx(n_samples)]
+        pass
 
     @abstractmethod
     def get_batch_sample_idx(self, n_samples):
@@ -56,4 +37,4 @@ class Sampler(ABC):
         Get idx of the next batch of samples.
 
         """
-        return [self.get_sample_id() for _ in range(n_samples)]
+        pass
