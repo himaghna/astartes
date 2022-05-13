@@ -1,40 +1,64 @@
 """Abstract Sampling class"""
 from abc import ABC, abstractmethod
 
+from astartes.exceptions import (
+    NotInitializedError,
+    DatasetError,
+)
+
 
 class Sampler(ABC):
+    """
+    Abstract Base Class for samplers.
+    """
     @abstractmethod
     def __init__(self, X, y=None, distance_matrix=None, **kwargs):
         pass
 
     @abstractmethod
-    def get_sample(self):
+    def _get_next_sample_idx(self):
         """
-        Get one sample.
-
-        """
-        pass
-
-    @abstractmethod
-    def get_sample_id(self):
-        """
-        Get the id of the next sample.
-
+        Get the idx of the next sample.
         """
         pass
 
-    @abstractmethod
-    def get_batch_sample(self, n_samples):
+    def _is_split(self):
+        return len(self._sample_idxs) > 0
+
+    def populate(self, X, y=None):
         """
-        Get a batch of samples
+        Load data in the instance.
 
         """
-        pass
+        self.X = X
+        self.y = y
+        self.is_populated = True
+        self.sample_count = 0
 
-    @abstractmethod
-    def get_batch_sample_idx(self, n_samples):
+    def get_samples(self, n_samples):
         """
-        Get idx of the next batch of samples.
+        Get samples.
+        """
+        self._verify_call(n_samples)
+        return [self.X[i] for i in self.get_sample_idxs(n_samples)]
+
+    def get_sample_idxs(self, n_samples):
+        """
+        Get idxs of samples.
 
         """
-        pass
+        self._verify_call(n_samples)
+        return [self._get_next_sample_idx() for _ in range(n_samples)]
+
+    def _verify_call(self, n_samples):
+        if not self.is_populated:
+            raise NotInitializedError(
+                'Populate sampler instance with data to get samples'
+            )
+        if self.sample_count > len(self.X) or self.sample_count + n_samples > len(self.X):
+            raise DatasetError(
+                'Dataset exhausted.'
+            )
+        self.sample_count += n_samples
+        return
+
